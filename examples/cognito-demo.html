@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cognito Authentication Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .logout-btn {
+      background-color: #dc3545;
+    }
+
+    .logout-btn:hover {
+      background-color: #c82333;
+    }
+
+    .user-info {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+
+    .error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .success {
+      background-color: #d1ecf1;
+      border: 1px solid #bee5eb;
+      color: #0c5460;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .config-section {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    code {
+      background-color: #e9ecef;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 AWS Cognito Authentication Demo</h1>
+
+    <!-- Configuration Section -->
+    <div class="config-section">
+      <h3>Configuration</h3>
+      <p>Before using this demo, update the configuration below with your Cognito settings from Terraform outputs:</p>
+      <div class="form-group">
+        <label for="userPoolId">User Pool ID:</label>
+        <input type="text" id="userPoolId" placeholder="us-west-2_XXXXXXXXX">
+      </div>
+      <div class="form-group">
+        <label for="clientId">Client ID:</label>
+        <input type="text" id="clientId" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXX">
+      </div>
+      <div class="form-group">
+        <label for="region">Region:</label>
+        <input type="text" id="region" value="us-west-2">
+      </div>
+      <button onclick="updateConfig()">Update Configuration</button>
+    </div>
+
+    <!-- Authentication Section -->
+    <div id="authSection">
+      <!-- Sign Up Form -->
+      <div id="signUpForm">
+        <h3>Sign Up</h3>
+        <div class="form-group">
+          <label for="signUpEmail">Email:</label>
+          <input type="email" id="signUpEmail" placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+          <label for="signUpPassword">Password:</label>
+          <input type="password" id="signUpPassword" placeholder="Password (min 8 characters)">
+        </div>
+        <div class="form-group">
+          <label for="signUpUserId">Custom User ID (optional):</label>
+          <input type="text" id="signUpUserId" placeholder="USR001" maxlength="50">
+        </div>
+        <button onclick="signUp()">Sign Up</button>
+      </div>
+
+      <!-- Confirmation Form -->
+      <div id="confirmationForm" class="hidden">
+        <h3>Confirm Email</h3>
+        <div class="form-group">
+          <label for="confirmationCode">Confirmation Code:</label>
+          <input type="text" id="confirmationCode" placeholder="Check your email for the code">
+        </div>
+        <button onclick="confirmSignUp()">Confirm</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <div id="signInForm">
+        <h3>Sign In</h3>
+        <div class="form-group">
+          <label for="signInEmail">Email:</label>
+          <input type="email" id="signInEmail" placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+          <label for="signInPassword">Password:</label>
+          <input type="password" id="signInPassword" placeholder="Password">
+        </div>
+        <button onclick="signIn()">Sign In</button>
+        <button onclick="showHostedUI()">Sign In with Hosted UI</button>
+      </div>
+
+      <!-- User Info Section -->
+      <div id="userSection" class="hidden">
+        <h3>User Information</h3>
+        <div id="userInfo" class="user-info"></div>
+        <button class="logout-btn" onclick="signOut()">Sign Out</button>
+        <button onclick="getUserAttributes()">Get User Attributes</button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div id="message"></div>
+
+    <!-- Instructions -->
+    <div style="margin-top: 30px;">
+      <h3>Instructions</h3>
+      <ol>
+        <li>Deploy your Terraform infrastructure with Cognito enabled</li>
+        <li>Get the configuration values from: <code>terraform output cognito_config</code></li>
+        <li>Fill in the configuration section above</li>
+        <li>Try signing up with a valid email address and optional custom User ID</li>
+        <li>Check your email for the confirmation code</li>
+        <li>Sign in with your credentials</li>
+        <li>Use "Get User Attributes" to see your custom User ID and other attributes</li>
+      </ol>
+
+      <h4>🆔 Custom User ID Feature</h4>
+      <p>This demo supports the <strong>custom:user_id</strong> attribute configured in your Terraform setup:</p>
+      <ul>
+        <li>Enter an optional User ID when signing up (1-50 characters)</li>
+        <li>View your custom User ID in the user attributes after signing in</li>
+        <li>Custom attributes are highlighted in blue in the attributes list</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- AWS SDK -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.12.min.js"></script>
+  <!-- Amazon Cognito Identity SDK -->
+  <script src="https://unpkg.com/amazon-cognito-identity-js@6.3.7/dist/amazon-cognito-identity.min.js"></script>
+
+  <script>
+    let userPool, cognitoUser;
+    let currentEmail = '';
+
+    function updateConfig() {
+      const userPoolId = document.getElementById('userPoolId').value;
+      const clientId = document.getElementById('clientId').value;
+      const region = document.getElementById('region').value;
+
+      if (!userPoolId || !clientId || !region) {
+        showMessage('Please fill in all configuration fields', 'error');
+        return;
+      }
+
+      // Configure AWS
+      AWS.config.region = region;
+
+      // Configure Cognito User Pool
+      const poolData = {
+        UserPoolId: userPoolId,
+        ClientId: clientId
+      };
+      userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
+      showMessage('Configuration updated successfully!', 'success');
+      checkAuthStatus();
+    }
+
+    function signUp() {
+      if (!userPool) {
+        showMessage('Please configure Cognito settings first', 'error');
+        return;
+      }
+
+      const email = document.getElementById('signUpEmail').value;
+      const password = document.getElementById('signUpPassword').value;
+      const customUserId = document.getElementById('signUpUserId').value;
+
+      if (!email || !password) {
+        showMessage('Please enter email and password', 'error');
+        return;
+      }
+
+      const attributeList = [
+        new AmazonCognitoIdentity.CognitoUserAttribute({
+          Name: 'email',
+          Value: email
+        })
+      ];
+
+      // Add custom user ID if provided
+      if (customUserId && customUserId.trim() !== '') {
+        attributeList.push(new AmazonCognitoIdentity.CognitoUserAttribute({
+          Name: 'custom:user_id',
+          Value: customUserId.trim()
+        }));
+      }
+
+      userPool.signUp(email, password, attributeList, null, (err, result) => {
+        if (err) {
+          showMessage('Sign up failed: ' + err.message, 'error');
+          return;
+        }
+
+        currentEmail = email;
+        cognitoUser = result.user;
+        showMessage('Sign up successful! Please check your email for confirmation code.', 'success');
+
+        // Show confirmation form
+        document.getElementById('confirmationForm').classList.remove('hidden');
+      });
+    }
+
+    function confirmSignUp() {
+      const confirmationCode = document.getElementById('confirmationCode').value;
+
+      if (!confirmationCode) {
+        showMessage('Please enter confirmation code', 'error');
+        return;
+      }
+
+      cognitoUser.confirmRegistration(confirmationCode, true, (err, result) => {
+        if (err) {
+          showMessage('Confirmation failed: ' + err.message, 'error');
+          return;
+        }
+
+        showMessage('Email confirmed successfully! You can now sign in.', 'success');
+        document.getElementById('confirmationForm').classList.add('hidden');
+      });
+    }
+
+    function signIn() {
+      if (!userPool) {
+        showMessage('Please configure Cognito settings first', 'error');
+        return;
+      }
+
+      const email = document.getElementById('signInEmail').value;
+      const password = document.getElementById('signInPassword').value;
+
+      if (!email || !password) {
+        showMessage('Please enter email and password', 'error');
+        return;
+      }
+
+      const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails({
+        Username: email,
+        Password: password
+      });
+
+      const userData = {
+        Username: email,
+        Pool: userPool
+      };
+      cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+      cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: (result) => {
+          showMessage('Sign in successful!', 'success');
+          showUserSection();
+          displayUserInfo(result);
+        },
+        onFailure: (err) => {
+          showMessage('Sign in failed: ' + err.message, 'error');
+        },
+        newPasswordRequired: (userAttributes, requiredAttributes) => {
+          showMessage('New password required. Please contact administrator.', 'error');
+        }
+      });
+    }
+
+    function signOut() {
+      if (cognitoUser) {
+        cognitoUser.signOut();
+        showMessage('Signed out successfully', 'success');
+        hideUserSection();
+      }
+    }
+
+    function getUserAttributes() {
+      if (!cognitoUser) {
+        showMessage('Please sign in first', 'error');
+        return;
+      }
+
+      cognitoUser.getUserAttributes((err, attributes) => {
+        if (err) {
+          showMessage('Failed to get user attributes: ' + err.message, 'error');
+          return;
+        }
+
+        let attributesHtml = '<h4>User Attributes:</h4><ul>';
+        let customUserId = null;
+
+        attributes.forEach(attribute => {
+          const name = attribute.getName();
+          const value = attribute.getValue();
+
+          if (name === 'custom:user_id') {
+            customUserId = value;
+          }
+
+          // Highlight custom attributes
+          const isCustom = name.startsWith('custom:');
+          attributesHtml += `<li><strong${isCustom ? ' style="color: #007bff;"' : ''}>${name}:</strong> ${value}</li>`;
+        });
+        attributesHtml += '</ul>';
+
+        if (customUserId) {
+          attributesHtml = `<p><strong>🆔 Custom User ID:</strong> <span style="color: #007bff; font-weight: bold;">${customUserId}</span></p>` + attributesHtml;
+        }
+
+        document.getElementById('userInfo').innerHTML += attributesHtml;
+      });
+    }
+
+    function showHostedUI() {
+      const userPoolId = document.getElementById('userPoolId').value;
+      const clientId = document.getElementById('clientId').value;
+      const region = document.getElementById('region').value;
+
+      if (!userPoolId || !clientId) {
+        showMessage('Please configure Cognito settings first', 'error');
+        return;
+      }
+
+      // This would redirect to Cognito hosted UI
+      // In a real app, you'd have a proper domain configured
+      showMessage('Hosted UI requires a domain to be configured in your Cognito settings', 'error');
+    }
+
+    function checkAuthStatus() {
+      if (!userPool) return;
+
+      const currentUser = userPool.getCurrentUser();
+      if (currentUser != null) {
+        currentUser.getSession((err, session) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
+          if (session.isValid()) {
+            cognitoUser = currentUser;
+            showUserSection();
+            showMessage('Welcome back! You are already signed in.', 'success');
+          }
+        });
+      }
+    }
+
+    function showUserSection() {
+      document.getElementById('authSection').style.display = 'none';
+      document.getElementById('userSection').classList.remove('hidden');
+    }
+
+    function hideUserSection() {
+      document.getElementById('authSection').style.display = 'block';
+      document.getElementById('userSection').classList.add('hidden');
+      document.getElementById('userInfo').innerHTML = '';
+    }
+
+    function displayUserInfo(authResult) {
+      const payload = authResult.getAccessToken().payload;
+      const userInfo = `
+                <h4>Welcome, ${payload.username}!</h4>
+                <p><strong>Token Type:</strong> ${authResult.getTokenType()}</p>
+                <p><strong>Access Token Expires:</strong> ${new Date(authResult.getAccessToken().getExpiration() * 1000)}</p>
+            `;
+      document.getElementById('userInfo').innerHTML = userInfo;
+    }
+
+    function showMessage(message, type = 'success') {
+      const messageDiv = document.getElementById('message');
+      messageDiv.className = type;
+      messageDiv.textContent = message;
+      messageDiv.style.display = 'block';
+
+      // Hide message after 5 seconds
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    // Check if user is already authenticated on page load
+    window.addEventListener('load', () => {
+      // Auto-fill region
+      document.getElementById('region').value = 'us-west-2';
+    });
+  </script>
+</body>
+</html>

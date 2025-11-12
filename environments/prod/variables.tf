@@ -173,3 +173,190 @@ variable "create_read_replica" {
   type        = bool
   default     = true
 }
+
+# Cognito Variables - Production Configuration
+variable "create_cognito" {
+  description = "Create Cognito User Pool and related resources"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_username_attributes" {
+  description = "Whether email addresses or phone numbers can be specified as usernames"
+  type        = list(string)
+  default     = ["email"]
+}
+
+variable "cognito_auto_verified_attributes" {
+  description = "Attributes to be auto-verified"
+  type        = list(string)
+  default     = ["email"]
+}
+
+variable "cognito_password_minimum_length" {
+  description = "Minimum length of the password"
+  type        = number
+  default     = 12  # Strong password for production
+}
+
+variable "cognito_password_require_lowercase" {
+  description = "Whether to require lowercase letters in password"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_password_require_numbers" {
+  description = "Whether to require numbers in password"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_password_require_symbols" {
+  description = "Whether to require symbols in password"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_password_require_uppercase" {
+  description = "Whether to require uppercase letters in password"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_mfa_configuration" {
+  description = "Multi-factor authentication configuration"
+  type        = string
+  default     = "ON"  # Required MFA for production
+}
+
+variable "cognito_generate_secret" {
+  description = "Whether to generate a client secret"
+  type        = bool
+  default     = true  # Always use secret in production
+}
+
+variable "cognito_explicit_auth_flows" {
+  description = "List of authentication flows"
+  type        = list(string)
+  default     = [
+    "ALLOW_USER_SRP_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH"
+    # No password auth for production security
+  ]
+}
+
+variable "cognito_allowed_oauth_flows" {
+  description = "List of allowed OAuth flows"
+  type        = list(string)
+  default     = ["code"]  # Only authorization code flow for production
+}
+
+variable "cognito_allowed_oauth_flows_user_pool_client" {
+  description = "Whether the client is allowed to follow OAuth protocol"
+  type        = bool
+  default     = true
+}
+
+variable "cognito_allowed_oauth_scopes" {
+  description = "List of allowed OAuth scopes"
+  type        = list(string)
+  default     = ["email", "openid", "profile"]
+}
+
+variable "cognito_callback_urls" {
+  description = "List of allowed callback URLs"
+  type        = list(string)
+  default     = ["https://app.example.com/auth/callback"]
+}
+
+variable "cognito_logout_urls" {
+  description = "List of allowed logout URLs"
+  type        = list(string)
+  default     = ["https://app.example.com"]
+}
+
+variable "cognito_domain" {
+  description = "Domain for the Cognito hosted UI"
+  type        = string
+  default     = ""  # Set via tfvars
+}
+
+variable "cognito_create_identity_pool" {
+  description = "Whether to create a Cognito Identity Pool"
+  type        = bool
+  default     = true  # Enable for AWS resource access
+}
+
+variable "cognito_allow_unauthenticated_identities" {
+  description = "Whether to allow unauthenticated identities"
+  type        = bool
+  default     = false  # No unauthenticated access in production
+}
+
+variable "cognito_user_pool_groups" {
+  description = "List of user pool groups to create"
+  type = list(object({
+    name        = string
+    description = optional(string)
+    precedence  = optional(number)
+    role_arn    = optional(string)
+  }))
+  default = [
+    {
+      name        = "super-admin"
+      description = "Super administrator group"
+      precedence  = 1
+    },
+    {
+      name        = "admin"
+      description = "Administrator group"
+      precedence  = 2
+    },
+    {
+      name        = "manager"
+      description = "Manager group"
+      precedence  = 3
+    },
+    {
+      name        = "user"
+      description = "Regular user group"
+      precedence  = 4
+    },
+    {
+      name        = "readonly"
+      description = "Read-only user group"
+      precedence  = 5
+    }
+  ]
+}
+
+variable "cognito_schemas" {
+  description = "List of schema attributes for the user pool"
+  type = list(object({
+    name                     = string
+    attribute_data_type      = string
+    developer_only_attribute = optional(bool, false)
+    mutable                  = optional(bool, true)
+    required                 = optional(bool, false)
+    min_length              = optional(number)
+    max_length              = optional(number)
+  }))
+  default = [
+    {
+      name                = "department"
+      attribute_data_type = "String"
+      mutable            = true
+      required           = false
+      min_length         = 1
+      max_length         = 50
+    },
+    {
+      name                = "employee_id"
+      attribute_data_type = "String"
+      mutable            = false
+      required           = false
+      min_length         = 1
+      max_length         = 20
+    }
+  ]
+}

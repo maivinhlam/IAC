@@ -59,3 +59,34 @@ output "web_url" {
   description = "Web application URL"
   value       = length(module.compute.instance_public_ips) > 0 ? "http://${module.compute.instance_public_ips[0]}" : "No public IPs available"
 }
+
+# Cognito Outputs
+output "cognito_user_pool_id" {
+  description = "Cognito User Pool ID"
+  value       = var.create_cognito ? module.cognito[0].user_pool_id : null
+}
+
+output "cognito_user_pool_client_id" {
+  description = "Cognito User Pool Client ID"
+  value       = var.create_cognito ? module.cognito[0].user_pool_client_id : null
+}
+
+output "cognito_user_pool_domain" {
+  description = "Cognito User Pool Domain"
+  value       = var.create_cognito ? module.cognito[0].user_pool_domain : null
+}
+
+output "cognito_config" {
+  description = "Cognito configuration for client applications"
+  value       = var.create_cognito ? module.cognito[0].cognito_config : null
+}
+
+output "cognito_jwt_urls" {
+  description = "Cognito JWT token URLs for validation"
+  value       = var.create_cognito ? module.cognito[0].jwt_token_urls : null
+}
+
+output "cognito_hosted_ui_urls" {
+  description = "Cognito Hosted UI URLs"
+  value       = var.create_cognito ? module.cognito[0].hosted_ui_urls : null
+}

@@ -115,3 +115,55 @@ module "database" {
 
   tags = local.common_tags
 }
+
+# Cognito Module (Authentication)
+module "cognito" {
+  count  = var.create_cognito ? 1 : 0
+  source = "../../modules/cognito"
+
+  name = local.name_prefix
+
+  # Basic Configuration
+  username_attributes         = var.cognito_username_attributes
+  auto_verified_attributes   = var.cognito_auto_verified_attributes
+  
+  # Strong Password Policy for production
+  password_minimum_length     = var.cognito_password_minimum_length
+  password_require_lowercase  = var.cognito_password_require_lowercase
+  password_require_numbers    = var.cognito_password_require_numbers
+  password_require_symbols    = var.cognito_password_require_symbols
+  password_require_uppercase  = var.cognito_password_require_uppercase
+  temporary_password_validity_days = 1  # Short validity for prod
+
+  # Maximum Security Configuration
+  advanced_security_mode = "ENFORCED"  # Enforce advanced security
+  mfa_configuration     = var.cognito_mfa_configuration
+  software_token_mfa_enabled = true
+
+  # Client Configuration
+  generate_secret            = var.cognito_generate_secret
+  explicit_auth_flows        = var.cognito_explicit_auth_flows
+  prevent_user_existence_errors = "ENABLED"
+  
+  # OAuth Configuration
+  allowed_oauth_flows                  = var.cognito_allowed_oauth_flows
+  allowed_oauth_flows_user_pool_client = var.cognito_allowed_oauth_flows_user_pool_client
+  allowed_oauth_scopes                 = var.cognito_allowed_oauth_scopes
+  callback_urls                        = var.cognito_callback_urls
+  logout_urls                          = var.cognito_logout_urls
+
+  # Domain Configuration
+  domain = var.cognito_domain
+
+  # Identity Pool for AWS access
+  create_identity_pool              = var.cognito_create_identity_pool
+  allow_unauthenticated_identities = var.cognito_allow_unauthenticated_identities
+
+  # User Pool Groups with role-based access
+  user_pool_groups = var.cognito_user_pool_groups
+
+  # Custom schemas for additional user attributes
+  schemas = var.cognito_schemas
+
+  tags = local.common_tags
+}

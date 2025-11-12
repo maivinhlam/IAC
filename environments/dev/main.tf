@@ -107,3 +107,48 @@ module "database" {
 
   tags = local.common_tags
 }
+
+# Cognito Module (Authentication)
+module "cognito" {
+  count  = var.create_cognito ? 1 : 0
+  source = "../../modules/cognito"
+
+  name = local.name_prefix
+
+  # Basic Configuration
+  username_attributes         = var.cognito_username_attributes
+  auto_verified_attributes   = var.cognito_auto_verified_attributes
+  
+  # Password Policy (relaxed for dev)
+  password_minimum_length     = var.cognito_password_minimum_length
+  password_require_lowercase  = var.cognito_password_require_lowercase
+  password_require_numbers    = var.cognito_password_require_numbers
+  password_require_symbols    = var.cognito_password_require_symbols
+  password_require_uppercase  = var.cognito_password_require_uppercase
+
+  # Client Configuration
+  generate_secret            = var.cognito_generate_secret
+  explicit_auth_flows        = var.cognito_explicit_auth_flows
+  
+  # OAuth Configuration (if enabled)
+  allowed_oauth_flows                  = var.cognito_allowed_oauth_flows
+  allowed_oauth_flows_user_pool_client = var.cognito_allowed_oauth_flows_user_pool_client
+  allowed_oauth_scopes                 = var.cognito_allowed_oauth_scopes
+  callback_urls                        = var.cognito_callback_urls
+  logout_urls                          = var.cognito_logout_urls
+
+  # Domain Configuration (optional for dev)
+  domain = var.cognito_domain
+
+  # Identity Pool (optional)
+  create_identity_pool              = var.cognito_create_identity_pool
+  allow_unauthenticated_identities = var.cognito_allow_unauthenticated_identities
+
+  # User Pool Groups
+  user_pool_groups = var.cognito_user_pool_groups
+
+  # Custom Schema Attributes
+  schemas = var.cognito_schemas
+
+  tags = local.common_tags
+}

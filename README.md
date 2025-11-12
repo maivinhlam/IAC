@@ -13,9 +13,11 @@ IAC/
 ├── modules/
 │   ├── vpc/
 │   ├── compute/
-│   └── database/
+│   ├── database/
+│   └── cognito/          # 🆕 User Authentication & Authorization
 ├── global/
-└── scripts/
+├── scripts/
+└── examples/             # 🆕 Integration examples
 ```
 
 ## Prerequisites

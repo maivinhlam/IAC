@@ -35,3 +35,37 @@ db_allocated_storage = 20
 db_name            = "devapp"
 db_username        = "admin"
 db_password        = "changeme123!"  # Change this in production!
+
+# Cognito Configuration
+create_cognito = true
+
+# Cognito User Pool Settings
+cognito_username_attributes      = ["email"]  # Login with email address
+cognito_auto_verified_attributes = ["email"]
+
+# Password Policy (relaxed for dev)
+cognito_password_minimum_length     = 8
+cognito_password_require_lowercase  = true
+cognito_password_require_numbers    = true
+cognito_password_require_symbols    = false
+cognito_password_require_uppercase  = false
+
+# Custom Attributes
+# The user_id custom attribute is configured by default in cognito_schemas variable
+# You can set additional custom attributes when creating users via:
+# - AWS Amplify: Auth.signUp(username, password, { attributes: { 'custom:user_id': 'USER123' } })
+# - AWS SDK: adminCreateUser with UserAttributes: [{ Name: 'custom:user_id', Value: 'USER123' }]
+
+# OAuth Settings
+cognito_allowed_oauth_flows                  = ["code", "implicit"]
+cognito_allowed_oauth_flows_user_pool_client = true
+cognito_allowed_oauth_scopes                 = ["email", "openid", "profile"]
+cognito_callback_urls                        = ["http://localhost:3000/auth/callback", "http://localhost:8080/auth/callback"]
+cognito_logout_urls                          = ["http://localhost:3000", "http://localhost:8080"]
+
+# Domain (optional - set if you want hosted UI)
+# cognito_domain = "your-app-dev-auth"  # Must be unique across AWS
+
+# Identity Pool (set to true if you need AWS resource access)
+cognito_create_identity_pool              = false
+cognito_allow_unauthenticated_identities = false
